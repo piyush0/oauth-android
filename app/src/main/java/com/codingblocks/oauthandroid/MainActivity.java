@@ -26,27 +26,31 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String TAG = "MainActivity";
+    Button auth;
+
     private static final String CLIENT_ID = "9047417470";
     private static final String REDIRECT_URI = "http://localhost";
     private static final String OAUTH_URL = "https://account.codingblocks.com/oauth/authorize";
-    public static final String TAG = "MainActivity";
-
-    WebView web;
-    Button auth;
-    SharedPreferences pref;
-
+    public static final String SHARED_PREFS_NAME = "AppPref";
+    public static final String SP_ACCESS_TOKEN_KEY = "access_token";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        pref = getSharedPreferences("AppPref", MODE_PRIVATE);
+
+
         auth = (Button) findViewById(R.id.auth);
         auth.setOnClickListener(new View.OnClickListener() {
-            Dialog auth_dialog;
+
 
             @Override
             public void onClick(View arg0) {
+                final Dialog auth_dialog;
+                WebView web;
+                final SharedPreferences pref;
+                pref = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
                 auth_dialog = new Dialog(MainActivity.this);
                 auth_dialog.setContentView(R.layout.auth_dialog);
@@ -68,9 +72,12 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "onPageFinished: " + authToken);
                             authComplete = true;
                             SharedPreferences.Editor edit = pref.edit();
-                            edit.putString("access_token", authToken);
-                            edit.commit();
+                            edit.putString(SP_ACCESS_TOKEN_KEY, authToken);
+                            edit.apply();
                             auth_dialog.dismiss();
+
+                            Intent i = new Intent(MainActivity.this, DetailsActivity.class);
+                            startActivity(i);
                         } else if (url.contains("error=access_denied")) {
                             Log.w(TAG, "ACCESS_DENIED_HERE");
                             authComplete = true;
@@ -81,10 +88,10 @@ public class MainActivity extends AppCompatActivity {
                 auth_dialog.show();
                 auth_dialog.setTitle("");
                 auth_dialog.setCancelable(true);
+
             }
         });
     }
-
     private String getAccessToken(String url) {
 
         int accessTokenIndex = url.indexOf("access_token");
@@ -96,4 +103,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return sb.toString();
     }
+
 }
